@@ -4,7 +4,7 @@ The `model-confidence-set` package provides a Python implementation of the Model
 
 This package
 - supports both stationary and block bootstrap methods.
-- implements two methods for p-value computation: `R` and `SQ`.
+- implements two methods for p-value computation: *relative* and *sequential*.
 - optionally displays progress during computation.
 
 ## Installation
@@ -43,7 +43,7 @@ print(results)
 - `alpha`: Significance level for determining model confidence set. Default is `0.05`.
 - `block_len`: The length of blocks for the block bootstrap. If `None`, it defaults to the number of observations.
 - `bootstrap_variant`: Specifies the bootstrap variant to use. Options are `'stationary'` or `'block'`. Default is `'stationary'`.
-- `method`: The method used for p-value calculation. Options are `'R'` or `'SQ'`. Default is `'R'`.
+- `method`: The method used for p-value calculation. Options are `'R'` for *relative* or `'SQ'` for *sequential*. Default is `'R'`.
 - `show_progress`: Whether to show a progress bar during bootstrap computations. Default is `False`.
 
 ## Acknowledgments

@@ -4,13 +4,13 @@ import warnings
 from numba import njit
 
 from tqdm import tqdm
-from typing import Optional, Union
+from typing import Any, Iterator, Optional, Union
 
-def default(x, default):
+def default(x: Any, default: Any) -> Any:
     return default if x is None else x
 
 @njit
-def stationary_bootstrap(n: int, n_boot: int, block_len: int):
+def stationary_bootstrap(n: int, n_boot: int, block_len: int) -> Iterator[np.ndarray]:
     p = 1.0 / block_len
     for _ in range(n_boot):
         indices = np.zeros(n, dtype=np.int32)
@@ -25,7 +25,7 @@ def stationary_bootstrap(n: int, n_boot: int, block_len: int):
         yield indices
 
 @njit
-def block_bootstrap(n: int, n_boot: int, block_len: int):
+def block_bootstrap(n: int, n_boot: int, block_len: int) -> Iterator[np.ndarray]:
     for _ in range(n_boot):
         indices = np.zeros(n, dtype=np.int32)
         indices[0] = int(np.random.random() * n)
@@ -79,7 +79,7 @@ class ModelConfidenceSet:
         The type of bootstrap to use. "stationary" for stationary bootstrap, and "block"
         for block bootstrap. Default is "stationary".
     method : {'R', 'SQ'}, optional
-        The method to compute p-values. "R" for the Romano-Wolf method, and "SQ" for
+        The method to compute p-values. "R" for the relative method, and "SQ" for
         the sequential method. Default is "R".
     show_progress : bool, optional
         If True, shows a progress bar during the bootstrap computation and MCS procedure.
@@ -224,7 +224,7 @@ class ModelConfidenceSet:
         self.excluded = excluded[pvals < self.alpha]
         self.pvalues = pvals
 
-    def results(self, as_dataframe=True) -> Union[dict, pd.DataFrame]:
+    def results(self, as_dataframe: bool=True) -> Union[dict, pd.DataFrame]:
         if self.included is None:
             self.compute()
         

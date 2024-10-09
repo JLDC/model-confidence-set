@@ -6,8 +6,10 @@ from numba import njit
 from tqdm import tqdm
 from typing import Any, Iterator, Optional, Union
 
+
 def default(x: Any, default: Any) -> Any:
     return default if x is None else x
+
 
 @njit
 def stationary_bootstrap(n: int, n_boot: int, block_len: int) -> Iterator[np.ndarray]:
@@ -23,6 +25,7 @@ def stationary_bootstrap(n: int, n_boot: int, block_len: int) -> Iterator[np.nda
         # Wrap around
         indices[indices > n - 1] -= n
         yield indices
+
 
 @njit
 def block_bootstrap(n: int, n_boot: int, block_len: int) -> Iterator[np.ndarray]:
@@ -40,21 +43,24 @@ def block_bootstrap(n: int, n_boot: int, block_len: int) -> Iterator[np.ndarray]
         indices[indices > n - 1] -= n
         yield indices
 
+
 def pval_R(z: np.ndarray, z_data: np.ndarray) -> float:
     TR_dist = np.abs(z).max(axis=(1, 2))
     TR = z_data.max()
     return (TR_dist > TR).mean()
 
+
 def pval_SQ(z: np.ndarray, z_data: np.ndarray) -> float:
-    dist = (z ** 2).sum(axis=(1, 2)) / 2
-    return (dist > ((z_data ** 2).sum() / 2)).mean()
+    dist = (z**2).sum(axis=(1, 2)) / 2
+    return (dist > ((z_data**2).sum() / 2)).mean()
+
 
 class ModelConfidenceSet:
     """
     A class for conducting the Model Confidence Set (MCS) procedure by Hansen, Lunde,
-    and Nason (2011), which evaluates and compares the performance of multiple 
-    predictive models based on their loss functions. The MCS provides a set of models 
-    that are statistically indistinguishable from the best model at a given 
+    and Nason (2011), which evaluates and compares the performance of multiple
+    predictive models based on their loss functions. The MCS provides a set of models
+    that are statistically indistinguishable from the best model at a given
     confidence level.
 
     The MCS method is a statistical tool used for model selection and comparison,
@@ -74,7 +80,8 @@ class ModelConfidenceSet:
         Default is 0.05.
     block_len : int, optional
         The length of blocks to use in block bootstrap methods. If None, it defaults to
-        the number of observations. Only applicable if bootstrap_variant is "block".
+        the square root of the number of observations. Only applicable if bootstrap_variant
+        is "block".
     bootstrap_variant : {'stationary', 'block'}, optional
         The type of bootstrap to use. "stationary" for stationary bootstrap, and "block"
         for block bootstrap. Default is "stationary".
@@ -95,7 +102,7 @@ class ModelConfidenceSet:
     pvalues : np.ndarray
         The p-values associated with each model, used to determine inclusion in the MCS.
     results : dict
-        A dictionary containing the p-values and status (included/excluded) for 
+        A dictionary containing the p-values and status (included/excluded) for
         each model. If compute() has not been called, results will be None.
 
     Methods
@@ -106,7 +113,7 @@ class ModelConfidenceSet:
     results() -> pd.DataFrame:
         Returns a DataFrame with the p-values and status (included/excluded) for each
         model, indexed by model names. If compute() has not been called, it will be
-        executed before returning the results. If as_dataframe is False, 
+        executed before returning the results. If as_dataframe is False,
         returns a dictionary.
 
     Examples
@@ -124,11 +131,17 @@ class ModelConfidenceSet:
     Ensure that your loss function is consistent with this assumption.
     """
 
-    def __init__(self, losses: np.ndarray, n_boot: int=5_000, 
-                 alpha: float=0.05, block_len: Optional[int]=None, 
-                 bootstrap_variant: str="stationary", method: str="R",
-                 show_progress: bool=False) -> None:
-    
+    def __init__(
+        self,
+        losses: np.ndarray,
+        n_boot: int = 5_000,
+        alpha: float = 0.05,
+        block_len: Optional[int] = None,
+        bootstrap_variant: str = "stationary",
+        method: str = "R",
+        show_progress: bool = False,
+    ) -> None:
+
         # Input validation
         if not (0 < alpha < 1):
             raise ValueError("alpha must be between 0 and 1")
@@ -138,7 +151,7 @@ class ModelConfidenceSet:
             raise ValueError("losses must have more than one column (models)")
         if n_boot <= 0:
             raise ValueError("n_boot must be positive")
-        block_len = default(block_len, losses.shape[0])
+        block_len = default(block_len, int(np.sqrt(losses.shape[0])))
         if block_len <= 0:
             raise ValueError("block_len must be positive")
         if block_len > losses.shape[0]:
@@ -148,10 +161,12 @@ class ModelConfidenceSet:
         if method not in ("R", "SQ"):
             raise ValueError("method must be one of 'R' or 'SQ'")
         if n_boot < 1_000:
-            warnings.warn("n_boot is less than 1,000, which may lead to inaccurate results")
+            warnings.warn(
+                "n_boot is less than 1,000, which may lead to inaccurate results"
+            )
         if not isinstance(show_progress, bool):
             raise ValueError("show_progress must be a boolean")
-        
+
         if isinstance(losses, pd.DataFrame):
             self.model_names = losses.columns
             self.losses = losses.values
@@ -161,11 +176,15 @@ class ModelConfidenceSet:
         self.alpha = alpha
         self.n_boot = n_boot
         self.block_len = block_len
-        self.bootstrap = stationary_bootstrap if bootstrap_variant == "stationary" else block_bootstrap
-        self.bootstrap(2, 1, 1) # Run once for numba compilation
+        self.bootstrap = (
+            stationary_bootstrap
+            if bootstrap_variant == "stationary"
+            else block_bootstrap
+        )
+        self.bootstrap(2, 1, 1)  # Run once for numba compilation
         self.pval_fn = pval_R if method == "R" else pval_SQ
         self.show_progress = show_progress
-        
+
         self.included = None
         self.excluded = None
         self.pvalues = None
@@ -204,12 +223,14 @@ class ModelConfidenceSet:
             m = len(included)
             scale = m / (m - 1)
             pvals[i] = self.pval_fn(
-                z0[:, *np.ix_(included, included)], 
-                z0_data[np.ix_(included, included)])
-            
+                z0[:, *np.ix_(included, included)], z0_data[np.ix_(included, included)]
+            )
+
             # Compute model to remove
             di_bar = np.mean(dij_bar[np.ix_(included, included)], axis=0) * scale
-            di_bar_boot = dij_bar_boot[:, *np.ix_(included, included)].mean(axis=1) * scale
+            di_bar_boot = (
+                dij_bar_boot[:, *np.ix_(included, included)].mean(axis=1) * scale
+            )
             di_std = np.sqrt(np.mean((di_bar_boot - di_bar) ** 2, axis=0))
             t = di_bar / di_std
             excluded[i] = included[np.argmax(t)] + 1
@@ -224,16 +245,16 @@ class ModelConfidenceSet:
         self.excluded = excluded[pvals < self.alpha]
         self.pvalues = pvals
 
-    def results(self, as_dataframe: bool=True) -> Union[dict, pd.DataFrame]:
+    def results(self, as_dataframe: bool = True) -> Union[dict, pd.DataFrame]:
         if self.included is None:
             self.compute()
-        
+
         idx = np.concatenate([self.excluded, self.included]).astype(int) - 1
 
         self.results = {
             "pvalues": self.pvalues,
             "status": np.where(self.pvalues >= self.alpha, "included", "excluded"),
-            "models": self.model_names[idx]
+            "models": self.model_names[idx],
         }
         if as_dataframe:
             df = pd.DataFrame(self.results)

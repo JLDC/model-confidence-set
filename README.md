@@ -41,7 +41,7 @@ print(results)
 - `losses`: A 2D `numpy.ndarray` or `pandas.DataFrame` containing loss values of models. Rows correspond to observations, and columns correspond to different models.
 - `n_boot`: Number of bootstrap replications for computing p-values. Default is `5000`.
 - `alpha`: Significance level for determining model confidence set. Default is `0.05`.
-- `block_len`: The length of blocks for the block bootstrap. If `None`, it defaults to the number of observations.
+- `block_len`: The length of blocks for the block bootstrap. If `None`, it defaults to the square root of the number of observations.
 - `bootstrap_variant`: Specifies the bootstrap variant to use. Options are `'stationary'` or `'block'`. Default is `'stationary'`.
 - `method`: The method used for p-value calculation. Options are `'R'` for *relative* or `'SQ'` for *sequential*. Default is `'R'`.
 - `show_progress`: Whether to show a progress bar during bootstrap computations. Default is `False`.

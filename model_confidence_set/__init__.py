@@ -5,6 +5,6 @@ This package provides a Python implementation of the Model Confidence Set (MCS) 
 """
 from .core import ModelConfidenceSet
 
-__version__ = "0.1.0"
+__version__ = "0.1.2"
 __author__ = "Jonathan Chassot"
 __all__ = ["ModelConfidenceSet"]

@@ -251,14 +251,14 @@ class ModelConfidenceSet:
 
         idx = np.concatenate([self.excluded, self.included]).astype(int) - 1
 
-        self.results = {
+        self.results_dict = {
             "pvalues": self.pvalues,
             "status": np.where(self.pvalues >= self.alpha, "included", "excluded"),
             "models": self.model_names[idx],
         }
         if as_dataframe:
-            df = pd.DataFrame(self.results)
+            df = pd.DataFrame(self.results_dict)
             df.index = df.pop("models")
             return df
         else:
-            return self.results
+            return self.results_dict

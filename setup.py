@@ -9,7 +9,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="model-confidence-set",
-    version="0.1.2",
+    version="0.1.3",
     license="MIT",
     description="model-confidence-set provides a Python implementation of the Model Confidence Set (MCS) procedure (Hansen, Lunde, and Nason, 2011), a statistical method for comparing and selecting models based on their performance.",
     long_description=long_description,
